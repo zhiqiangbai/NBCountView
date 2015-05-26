@@ -1,6 +1,6 @@
 //
 //  NBCountView.m
-//  GQF_flowers
+//  NBCountView
 //
 //  Created by NapoleonBai on 15/5/22.
 //  Copyright (c) 2015年 NapoleonBai. All rights reserved.
