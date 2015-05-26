@@ -19,7 +19,6 @@
 @property(nonatomic,assign)NSInteger minValue;
 @property(nonatomic,assign)NSInteger changeAgainValue;
 
-@property(nonatomic,assign)NSInteger stepValue;
 @property(nonatomic,copy)UIColor *borderColor;
 @property(nonatomic,copy)UIColor *backgroudColor;
 
@@ -62,6 +61,8 @@
     self.countTextField.font = [UIFont systemFontOfSize:20];
     
     self.stepValue = 1;//默认每步+1
+    self.minValue = 0;
+    self.maxValue = 100;
     
     [self addSubview:self.lessBtn];
     [self addSubview:self.countTextField];
@@ -69,17 +70,20 @@
 }
 
 - (void)addCount:(id)sender{
+    [self resignFirstResponder];
     self.changeAgainValue = self.currentValue;
     self.currentValue = self.currentValue+self.stepValue > self.maxValue ? self.maxValue : self.currentValue + self.stepValue;
-    [self countValueChangeBefore:self.changeAgainValue withAfterValue:self.changeAgainValue + self.stepValue];
+    [self countValueChangeBefore:self.changeAgainValue withAfterValue:self.changeAgainValue + self.stepValue > self.maxValue ? self.maxValue : self.changeAgainValue + self.stepValue];
     
     self.countTextField.text = [NSString stringWithFormat:@"%lu",self.currentValue ];
 }
 
 - (void)lessCount:(id)sender{
+    [self resignFirstResponder];
     self.changeAgainValue = self.currentValue;
+
     self.currentValue = self.currentValue-self.stepValue < self.minValue ? self.minValue : self.currentValue - self.stepValue;
-    [self countValueChangeBefore:self.changeAgainValue withAfterValue:self.changeAgainValue + self.stepValue];
+    [self countValueChangeBefore:self.changeAgainValue withAfterValue:(self.changeAgainValue - self.stepValue)<0 ? self.minValue : self.changeAgainValue - self.stepValue];
 
     self.countTextField.text = [NSString stringWithFormat:@"%lu",self.currentValue ];
 }
@@ -104,7 +108,11 @@
     self.maxValue = maxValue;
     self.minValue = minValue;
     self.currentValue = currentValue;
-    self.countTextField.text = [NSString stringWithFormat:@"%lu",currentValue];
+    self.countTextField.text = [NSString stringWithFormat:@"%lu",currentValue < self.minValue ? self.minValue : (self.maxValue > currentValue ? currentValue : self.maxValue)];
+}
+
+- (void)setCurrentValues:(NSInteger)currentValue{
+    [self setCurrentValue:currentValue withMaxValue:self.maxValue withMinValue:self.minValue];
 }
 
 - (void)setCountViewEdit:(BOOL)isEdit{
@@ -128,7 +136,6 @@
             }
         }
     }
-
 }
 
 - (void)countChange:(id)sender{
@@ -139,20 +146,34 @@
         textfield.text = [NSString stringWithFormat:@"%lu",self.currentValue = self.maxValue];
     }
     else if(inputValue < self.minValue){
-        textfield.text = [NSString stringWithFormat:@"%lu",self.currentValue = self.minValue];
+        //textfield.text = [NSString stringWithFormat:@"%lu",self.currentValue = self.minValue];
     }
     else{
         self.currentValue = inputValue;
     }
-    [self countValueChangeBefore:self.changeAgainValue withAfterValue:inputValue];
+    [self countValueChangeBefore:self.changeAgainValue withAfterValue:inputValue < self.minValue ? self.minValue : inputValue];
 }
 
 #pragma UITextField Delegate
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField{
+    if (self.isEdit) {
+        if (_delegate) {
+            if ([_delegate respondsToSelector:@selector(countViewShowKeyBoard)]) {
+                [_delegate countViewShowKeyBoard];
+            }
+        }
+    }
     return self.isEdit;
 }
 
 - (BOOL)resignFirstResponder{
+    NSInteger inputValue = [self.countTextField.text integerValue];
+    self.changeAgainValue = self.currentValue;
+    if(inputValue < self.minValue){
+        self.countTextField.text = [NSString stringWithFormat:@"%lu",self.currentValue = self.minValue];
+        [self countValueChangeBefore:self.changeAgainValue withAfterValue:self.currentValue];
+
+    }
     return [self.countTextField resignFirstResponder];
 }
 

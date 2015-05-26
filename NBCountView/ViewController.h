@@ -7,9 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "NBCountView.h"
 
-@interface ViewController : UIViewController
-
+@interface ViewController : UIViewController<NBCountViewDelegate>
+@property (strong, nonatomic) NBCountView *firstView;
+@property (strong, nonatomic) NBCountView *secondView;
+@property (strong, nonatomic) NBCountView *thirdView;
 
 @end
 
