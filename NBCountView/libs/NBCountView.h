@@ -13,32 +13,40 @@
 @interface NBCountView : UIView<UITextFieldDelegate>
 
 @property(nonatomic,weak,setter=setDelegate:)id<NBCountViewDelegate> delegate;
-@property(nonatomic,assign)NSInteger stepValue;
+@property(nonatomic)NSInteger stepNumber;///< 单步增加减少多少,缺省为1
+@property(nonatomic)CGFloat buttonFont;///< 按钮标题字体大小
+@property(nonatomic)CGFloat textfieldFont;///< 输入文字字体大小
+@property(nonatomic,strong)UIColor *borderColor;///< 边框颜色
+@property(nonatomic)NSInteger currentNumber;///< 当前值
+@property(nonatomic)NSInteger maxNumber;///< 最大值
+@property(nonatomic)NSInteger minNumber;///< 最小值,缺省为0
+@property(nonatomic,getter=isAllowEdit)BOOL allowEdit;///< 是否允许编辑
+@property (nonatomic,strong)UIImage *decreaseImage;///< 减按钮背景图片
+@property (nonatomic,strong)UIImage *increaseImage;///< 加按钮背景图片
+@property (nonatomic,copy)NSString *decreaseTitle;///< 减按钮标题
+@property (nonatomic,copy)NSString *increaseTitle;///< 加按钮标题
 
-//设置当前值,最大值,以及最小值
-- (void)setCurrentValue:(NSInteger)currentValue withMaxValue:(NSInteger) maxValue withMinValue:(NSInteger)minValue;
 
-//设置当前值
-- (void)setCurrentValues:(NSInteger)currentValue;
-
-//设置边框颜色
-- (void)setBorderColor:(UIColor *)borderColor;
-
-//设置是否允许编辑
-- (void)setCountViewEdit:(BOOL)isEdit;
++ (instancetype)countViewWithFrame:(CGRect)frame;
 
 @end
 
 @protocol NBCountViewDelegate <NSObject>
+@optional
+/**
+ 当值发生改变时调用
 
-//获取当前值和最大值,在输入数字或者添加数字超过最大值时调用
-- (void)countViewValue:(NSInteger) value moreThanMaxValue:(NSInteger) maxValue;
+ @param countView 当前操作实例对象
+ @param value 当前显示值
+ */
+- (void)countView:(NBCountView *)countView number:(NSInteger)value;
 
-//获取当前值和最小值,在输入数字或者添加数字低于最小值时调用
-- (void)countViewValue:(NSInteger) value lessThanMinValue:(NSInteger) minValue;
+/**
+ 值超过范围时调用
 
-//获取改变之前的值和当前值,在数字改变的时候调用
-- (void)countViewValueChangeAgain:(NSInteger) againValue after:(NSInteger)currentValue;
+ @param countView 当前操作实例对象
+ */
+- (void)countViewOverFlow:(NBCountView *)countView;
 
 //键盘弹出时调用,在启用手动编辑的时候执行
 - (void)countViewShowKeyBoard;
