@@ -30,11 +30,16 @@
     [_secondView setBorderColor:[UIColor redColor]];
     _secondView.allowEdit = YES;
     _secondView.maxNumber = 30;
+    _secondView.buttonDisableColor = [UIColor orangeColor];
     _secondView.countViewChangeHandler = ^(NSInteger number){
         NSLog(@"===>>>> %ld",number);
     };
-    _secondView.countViewOverFlowHandler = ^(){
-        NSLog(@"溢出===>>>>");
+    _secondView.countViewOverFlowHandler = ^(BOOL isMax){
+        if (isMax) {
+            NSLog(@"超过最大值===>>>");
+        }else{
+            NSLog(@"低于最小值===>>>");
+        }
     };
     _secondView.layer.cornerRadius = 1;
     [_secondView setStepNumber:3];
@@ -42,11 +47,14 @@
     
     
     _thirdView = [[NBCountView alloc]initWithFrame:CGRectMake(85, 150, 150, 40)];
-    [_thirdView setBorderColor:[UIColor redColor]];
+    [_thirdView setTintColor:[UIColor redColor]];
     _thirdView.allowEdit = YES;
     [_thirdView setDelegate:self];
+    _thirdView.number = -1;
+    _thirdView.minNumber = -2;
+    _thirdView.maxNumber = -3;
     // 采用tintColor设置title字体颜色
-    _thirdView.tintColor = [UIColor yellowColor];
+    _thirdView.borderColor = [UIColor yellowColor];
     _thirdView.textfieldTextColor = [UIColor greenColor];
     [_thirdView setStepNumber:5];
     [self.view addSubview:_thirdView];
