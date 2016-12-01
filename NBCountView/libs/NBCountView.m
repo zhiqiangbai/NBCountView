@@ -30,7 +30,6 @@
 @property(nonatomic,strong)UIButton *increaseBtn;
 @property(nonatomic,strong)NBCountTextField *countTextField;
 @property(nonatomic,assign)NSInteger changeAgainValue;
-@property(nonatomic,copy)UIColor *backgroudColor;
 @property (nonatomic, strong) NSTimer *timer;///< 加减定时器
 
 
@@ -105,6 +104,7 @@
     self.decreaseTitle = @"－";
     self.increaseTitle = @"＋";
     self.allowEdit = YES;
+    self.enableLongPress = NO;
     
     self.countTextField = [NBCountTextField new];
     self.countTextField.delegate = self;
@@ -113,11 +113,25 @@
     self.countTextField.font = [UIFont systemFontOfSize:_textfieldFont];
     self.countTextField.text = [NSString stringWithFormat:@"%ld",_minNumber];
     [self.countTextField addTarget:self action:@selector(countChange:) forControlEvents:UIControlEventEditingChanged];
-
+    
+    self.layer.cornerRadius = 5;
+    self.layer.masksToBounds = YES;
+    
     [self addSubview:self.decreaseBtn];
     [self addSubview:self.countTextField];
     [self addSubview:self.increaseBtn];
 
+}
+
+- (void)setTextfieldTextColor:(UIColor *)textfieldTextColor{
+    _textfieldTextColor = textfieldTextColor;
+    self.countTextField.textColor = textfieldTextColor;
+}
+
+- (void)setTintColor:(UIColor *)tintColor{
+    [super setTintColor:tintColor];
+    [self.increaseBtn setTitleColor:tintColor forState:UIControlStateNormal];
+    [self.decreaseBtn setTitleColor:tintColor forState:UIControlStateNormal];
 }
 
 - (void)setIncreaseTitle:(NSString *)increaseTitle{
@@ -146,15 +160,15 @@
  */
 - (void)increase{
     [self resignFirstResponder];
-    self.changeAgainValue = self.currentNumber;
-    self.currentNumber = self.currentNumber+self.stepNumber > self.maxNumber ? self.maxNumber : self.currentNumber + self.stepNumber;
+    self.changeAgainValue = _number;
+    _number = _number+self.stepNumber > self.maxNumber ? self.maxNumber : _number + self.stepNumber;
     
     // 如果当前值是最小值,则停止进行运算
-    if (self.currentNumber+self.stepNumber > self.maxNumber) {
+    if (_number+self.stepNumber > self.maxNumber) {
         [self invalidateTimer];
     }
     
-    [self countValueChangeBefore:self.changeAgainValue withAfterValue:self.currentNumber];
+    [self countValueChangeBefore:self.changeAgainValue withAfterValue:_number];
 }
 
 /**
@@ -163,23 +177,21 @@
  */
 - (void)decrease{
     [self resignFirstResponder];
-    self.changeAgainValue = self.currentNumber;
+    self.changeAgainValue = _number;
 
-    self.currentNumber = self.currentNumber-self.stepNumber < self.minNumber ? self.minNumber : self.currentNumber - self.stepNumber;
+    _number = _number-self.stepNumber < self.minNumber ? self.minNumber : _number - self.stepNumber;
     
     // 如果当前值是最小值,则停止进行运算
-    if (self.currentNumber-self.stepNumber < self.minNumber) {
+    if (_number-self.stepNumber < self.minNumber) {
         [self invalidateTimer];
     }
     
-    [self countValueChangeBefore:self.changeAgainValue withAfterValue:self.currentNumber];
+    [self countValueChangeBefore:self.changeAgainValue withAfterValue:_number];
 }
 
 - (void)setBorderColor:(UIColor *)borderColor{
     self.layer.borderColor = borderColor.CGColor;
     self.layer.borderWidth = 1;
-    self.layer.cornerRadius = 5;
-    self.layer.masksToBounds = YES;
     
     self.increaseBtn.layer.borderColor = borderColor.CGColor;
     self.increaseBtn.layer.borderWidth = 1;
@@ -191,37 +203,43 @@
     [self.decreaseBtn setTitleColor:borderColor forState:UIControlStateNormal];
 }
 
-- (void)setCurrentNumber:(NSInteger)currentNumber{
-    if (currentNumber< self.minNumber || currentNumber > self.maxNumber) {
-        return;
-    }
-    _currentNumber = currentNumber;
-    self.countTextField.text = [NSString stringWithFormat:@"%ld",_currentNumber];
+- (void)setNumber:(NSInteger)number{
+    
+    [self countValueChangeBefore:_number withAfterValue:number];
+
+//    if (number< self.minNumber || number > self.maxNumber) {
+//        return;
+//    }
+//    _number = number;
+//    self.countTextField.text = [NSString stringWithFormat:@"%ld",_number];
 }
 
 - (void)countValueChangeBefore:(NSInteger)againNumber withAfterValue:(NSInteger)afterNumber{
-
-    if (_delegate) {
-        if (afterNumber > self.maxNumber || afterNumber < self.minNumber) {
-            if ([_delegate respondsToSelector:@selector(countViewOverFlow:)]) {
-                [_delegate countViewOverFlow:self];
-            }
-            self.currentNumber = againNumber;
-        }else{
-            self.currentNumber = afterNumber;
+    if (afterNumber > self.maxNumber || afterNumber < self.minNumber) {
+        if (_delegate && [_delegate respondsToSelector:@selector(countViewOverFlow:)]) {
+            [_delegate countViewOverFlow:self];
         }
-        self.countTextField.text = [NSString stringWithFormat:@"%ld",self.currentNumber];
-        
-        if ([_delegate respondsToSelector:@selector(countView:number:)]) {
-            [_delegate countView:self number:self.currentNumber];
+        if (self.countViewOverFlowHandler) {
+            self.countViewOverFlowHandler();
         }
+        _number = againNumber;
+    }else{
+        _number = afterNumber;
+    }
+    self.countTextField.text = [NSString stringWithFormat:@"%ld",_number];
+    
+    if (_delegate && [_delegate respondsToSelector:@selector(countView:number:)]) {
+        [_delegate countView:self number:_number];
+    }
+    if (self.countViewChangeHandler) {
+        self.countViewChangeHandler(_number);
     }
 }
 
 - (void)countChange:(id)sender{
     UITextField *textfield = (UITextField *)sender;
     NSInteger inputValue = [textfield.text integerValue];
-    self.changeAgainValue = self.currentNumber;
+    self.changeAgainValue = _number;
    
     [self countValueChangeBefore:self.changeAgainValue withAfterValue:inputValue];
 }
@@ -254,10 +272,10 @@
 
 - (BOOL)resignFirstResponder{
     NSInteger inputValue = [self.countTextField.text integerValue];
-    self.changeAgainValue = self.currentNumber;
+    self.changeAgainValue = _number;
     if(inputValue < self.minNumber){
-        self.countTextField.text = [NSString stringWithFormat:@"%ld",self.currentNumber = self.minNumber];
-        [self countValueChangeBefore:self.changeAgainValue withAfterValue:self.currentNumber];
+        self.countTextField.text = [NSString stringWithFormat:@"%ld",_number = self.minNumber];
+        [self countValueChangeBefore:self.changeAgainValue withAfterValue:_number];
 
     }
     return [self.countTextField resignFirstResponder];
@@ -280,14 +298,14 @@
     
     if (sender == self.increaseBtn)
     {
-        if (self.currentNumber <= self.maxNumber - self.stepNumber) {
-            _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(increase) userInfo:nil repeats:YES];
+        if (_number <= self.maxNumber - self.stepNumber) {
+            _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(increase) userInfo:nil repeats:self.isEnableLongPress];
         }
     }
     else
     {
-        if (self.currentNumber>=self.minNumber+self.stepNumber) {
-            _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(decrease) userInfo:nil repeats:YES];
+        if (_number>=self.minNumber+self.stepNumber) {
+            _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(decrease) userInfo:nil repeats:self.isEnableLongPress];
         }
     }
     if (_timer) {
