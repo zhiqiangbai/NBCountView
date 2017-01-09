@@ -36,7 +36,7 @@ typedef void(^countViewOverFlowBlock)(BOOL isMax);
 @property(nonatomic,strong)UIColor *borderColor;///< 线条颜色
 @property(nonatomic,getter=curretnNumber)NSInteger number;///< 当前值
 @property(nonatomic)NSInteger maxNumber;///< 最大值
-@property(nonatomic)NSInteger minNumber;///< 最小值,缺省为0
+@property(nonatomic)NSInteger minNumber;///< 最小值
 @property(nonatomic,getter=isAllowEdit)BOOL allowEdit;///< 是否允许编辑
 @property(nonatomic,strong)UIImage *decreaseImage;///< 减按钮背景图片
 @property(nonatomic,strong)UIImage *increaseImage;///< 加按钮背景图片

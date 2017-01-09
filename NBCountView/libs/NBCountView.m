@@ -102,7 +102,7 @@
 
 - (void)initView{
     _stepNumber = 1;
-    _minNumber = 0;
+    _minNumber = NSIntegerMin;
     _number = 1;
     _maxNumber = NSIntegerMax;
     _textfieldFont = 15;
@@ -207,20 +207,24 @@
 }
 
 - (void)setNumber:(NSInteger)number{
+    //如果设置当前值,如果低于最小值,则将当前值设置为最小值
     if (_minNumber > number) {
-        _minNumber = number;
+        number = _minNumber;
     }
+    //如果超过最大值,则将当前值设置为最大值
     if (_maxNumber < number) {
-        _maxNumber = number;
+        number = _maxNumber;
     }
     _number = number;
     _countTextField.text = [NSString stringWithFormat:@"%ld",_number];
 }
 
 - (void)setMaxNumber:(NSInteger)maxNumber{
+    // 设置最大值,如果低于当前值,则修改当前值为最大值
     if (maxNumber < _number) {
         _number = maxNumber;
     }
+    //如果低于最小值,则将最小值与最大值等值
     if (maxNumber < _minNumber) {
         _minNumber = maxNumber;
     }
@@ -230,9 +234,11 @@
 }
 
 - (void)setMinNumber:(NSInteger)minNumber{
+    // 设置最小值 ,如果大于最大值,那么将最大值与最小值等值
     if (minNumber > _maxNumber) {
         _maxNumber = minNumber;
     }
+    // 如果当前值小于最小值,那么僵当前值等值于最小值
     if (minNumber > _number) {
         _number = minNumber;
     }
